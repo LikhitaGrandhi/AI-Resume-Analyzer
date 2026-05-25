@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+    <title>AI Resume Analyzer</title>
+
+    <link
+        rel="stylesheet"
+        href="{{ url_for('static', filename='style.css') }}"
+    >
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>AI Resume Analyzer</h1>
+
+        <form method="POST" enctype="multipart/form-data">
+
+            <label>Upload Resume:</label>
+
+            <br><br>
+
+            <input
+                type="file"
+                name="resume"
+                required
+            >
+
+            <br><br>
+
+            <label>Paste Job Description:</label>
+
+            <br><br>
+
+            <textarea
+                name="job_description"
+                rows="10"
+            ></textarea>
+
+            <br><br>
+
+            <button type="submit">
+                Analyze Resume
+            </button>
+
+        </form>
+
+        <div class="result">
+
+            <h2 class="score">
+    ATS Score: {{ ats_score }}%
+</h2>
+
+            <h3>Skills Found:</h3>
+
+            <ul>
+
+                {% for skill in found_skills %}
+
+                    <li>{{ skill }}</li>
+
+                {% endfor %}
+
+            </ul>
+
+            <h3>Missing Skills:</h3>
+
+            <ul>
+
+                {% for skill in missing_skills %}
+
+                    <li>{{ skill }}</li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+    </div>
+
+</body>
+</html>
