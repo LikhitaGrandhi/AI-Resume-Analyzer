@@ -4,11 +4,14 @@ import os
 
 app = Flask(__name__)
 
-# Upload folder
-UPLOAD_FOLDER = 'uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+UPLOAD_FOLDER = "uploads"
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
-# Skills database
+# Create uploads folder if it doesn't exist
+if not os.path.exists(UPLOAD_FOLDER):
+    os.makedirs(UPLOAD_FOLDER)
+
+# Skills Database
 skills_list = [
     "python",
     "java",
@@ -25,37 +28,41 @@ skills_list = [
     "mysql",
     "mongodb",
     "machine learning",
+    "deep learning",
     "data analysis",
     "power bi",
     "git",
     "github",
     "aws",
+    "azure",
+    "docker",
+    "kubernetes",
     "spring boot",
     "rest api",
     "oop",
     "dbms",
-    "dsa"
+    "dsa",
+    "pandas",
+    "numpy",
+    "tensorflow",
+    "pytorch",
+    "excel"
 ]
 
 
-# Extract text from PDF
 def extract_text(pdf_path):
-
     text = ""
 
     with pdfplumber.open(pdf_path) as pdf:
-
         for page in pdf.pages:
-
             extracted = page.extract_text()
-
             if extracted:
                 text += extracted
 
     return text.lower()
 
 
-@app.route('/', methods=['GET', 'POST'])
+@app.route("/", methods=["GET", "POST"])
 def index():
 
     ats_score = 0
@@ -63,99 +70,109 @@ def index():
     missing_skills = []
     suggestions = []
 
-    if request.method == 'POST':
+    total_found = 0
+    matched = 0
 
-        # Get uploaded file
-        resume = request.files['resume']
+    if request.method == "POST":
 
-        # Get job description
-        job_description = request.form[
-            'job_description'
-        ].lower()
+        resume = request.files["resume"]
 
-        # Save uploaded resume
+        if not resume.filename.endswith(".pdf"):
+            return "Please upload only PDF resumes."
+
+        job_description = request.form["job_description"].lower()
+
         filepath = os.path.join(
-            app.config['UPLOAD_FOLDER'],
+            app.config["UPLOAD_FOLDER"],
             resume.filename
         )
 
         resume.save(filepath)
 
-        # Extract resume text
         resume_text = extract_text(filepath)
 
-        # Find skills in resume
-        for skill in skills_list:
+        # Delete uploaded file
+        os.remove(filepath)
 
+        # Skills in Resume
+        for skill in skills_list:
             if skill in resume_text:
                 found_skills.append(skill)
 
-        # Find skills in JD
+        total_found = len(found_skills)
+
+        # Skills in Job Description
         jd_skills = []
 
         for skill in skills_list:
-
             if skill in job_description:
                 jd_skills.append(skill)
 
-        # Compare skills
-        matched = 0
-
+        # Compare Skills
         for skill in jd_skills:
-
             if skill in found_skills:
                 matched += 1
-
             else:
                 missing_skills.append(skill)
 
-        # Calculate ATS score
-        if len(jd_skills) > 0:
+        # Better ATS Score
+        score = 0
 
-            ats_score = int(
-                (matched / len(jd_skills)) * 100
-            )
+        if len(jd_skills) > 0:
+            score += (matched / len(jd_skills)) * 60
+
+        if "projects" in resume_text:
+            score += 20
+
+        if "internship" in resume_text:
+            score += 10
+
+        if "github" in resume_text:
+            score += 10
+
+        ats_score = int(score)
 
         # Suggestions
         if ats_score < 50:
-
             suggestions.append(
-                "Add more relevant technical skills."
+                "Improve technical skills according to the Job Description."
             )
 
         if "projects" not in resume_text:
-
             suggestions.append(
-                "Add a strong projects section."
+                "Add a Projects section with measurable achievements."
             )
 
         if "github" not in resume_text:
-
             suggestions.append(
-                "Add GitHub profile link."
+                "Add your GitHub profile link."
             )
 
         if "internship" not in resume_text:
-
             suggestions.append(
-                "Add internship or practical experience."
+                "Mention internships or practical experience."
             )
 
-        if len(found_skills) < 5:
-
+        if total_found < 8:
             suggestions.append(
-                "Include more technical skills in resume."
+                "Include more technical skills."
+            )
+
+        if len(missing_skills) > 0:
+            suggestions.append(
+                "Add the missing skills if you possess them."
             )
 
     return render_template(
-        'index.html',
+        "index.html",
         ats_score=ats_score,
         found_skills=found_skills,
         missing_skills=missing_skills,
-        suggestions=suggestions
+        suggestions=suggestions,
+        total_found=total_found,
+        matched=matched
     )
 
 
-if __name__ == '__main__':
-
+if __name__ == "__main__":
     app.run(debug=True)

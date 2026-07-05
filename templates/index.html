@@ -1,79 +1,139 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
 
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>AI Resume Analyzer</title>
 
-    <link
-        rel="stylesheet"
-        href="{{ url_for('static', filename='style.css') }}"
-    >
+    <link rel="stylesheet"
+          href="{{ url_for('static', filename='style.css') }}">
 
 </head>
 
 <body>
 
-    <div class="container">
+<div class="container">
 
-        <h1>AI Resume Analyzer</h1>
+    <h1>📄 AI Resume Analyzer</h1>
 
-        <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data">
 
-            <label>Upload Resume:</label>
+        <label><b>Upload Resume (PDF)</b></label>
 
-            <br><br>
+        <input type="file"
+               name="resume"
+               accept=".pdf"
+               required>
 
-            <input
-                type="file"
-                name="resume"
-                required
-            >
+        <label><b>Paste Job Description</b></label>
 
-            <br><br>
+        <textarea
+            name="job_description"
+            rows="10"
+            placeholder="Paste the Job Description here..."
+            required></textarea>
 
-            <label>Paste Job Description:</label>
+        <button type="submit">
+            Analyze Resume
+        </button>
 
-            <br><br>
+    </form>
 
-            <textarea
-                name="job_description"
-                rows="10"
-            ></textarea>
+    {% if ats_score > 0 %}
 
-            <br><br>
+    <div class="result">
 
-            <button type="submit">
-                Analyze Resume
-            </button>
+        <h2>ATS Score</h2>
 
-        </form>
+        <div class="progress">
 
-        <div class="result">
+            <div class="progress-bar"
+                 style="width: {{ ats_score }}%;">
 
-            <h2 class="score">
-    ATS Score: {{ ats_score }}%
-</h2>
+                {{ ats_score }}%
 
-            <h3>Skills Found:</h3>
+            </div>
+
+        </div>
+
+        <div class="stats">
+
+            <div class="card">
+
+                <h3>{{ total_found }}</h3>
+
+                <p>Total Skills Found</p>
+
+            </div>
+
+            <div class="card">
+
+                <h3>{{ matched }}</h3>
+
+                <p>Matched Skills</p>
+
+            </div>
+
+            <div class="card">
+
+                <h3>{{ missing_skills|length }}</h3>
+
+                <p>Missing Skills</p>
+
+            </div>
+
+        </div>
+
+        <div class="section">
+
+            <h2>✅ Skills Found</h2>
 
             <ul>
 
                 {% for skill in found_skills %}
 
-                    <li>{{ skill }}</li>
+                <li class="found">
+                    {{ skill }}
+                </li>
 
                 {% endfor %}
 
             </ul>
 
-            <h3>Missing Skills:</h3>
+        </div>
+
+        <div class="section">
+
+            <h2>❌ Missing Skills</h2>
 
             <ul>
 
                 {% for skill in missing_skills %}
 
-                    <li>{{ skill }}</li>
+                <li class="missing">
+                    {{ skill }}
+                </li>
+
+                {% endfor %}
+
+            </ul>
+
+        </div>
+
+        <div class="section">
+
+            <h2>💡 Suggestions</h2>
+
+            <ul>
+
+                {% for suggestion in suggestions %}
+
+                <li class="suggestion">
+                    {{ suggestion }}
+                </li>
 
                 {% endfor %}
 
@@ -83,5 +143,10 @@
 
     </div>
 
+    {% endif %}
+
+</div>
+
 </body>
+
 </html>
